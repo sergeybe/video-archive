@@ -1,0 +1,97 @@
+---
+version: "3.8"
+x-common-django:
+  &common-django
+  image: video-archive_django:latest
+  environment: &environment
+    - DB_HOST=mariadb
+    - DB_NAME=video-archive
+    - DB_USER=video-archive
+    - DB_PASSWORD=testtesttest123
+    - DEBUG=True
+    - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+    - SECRET_KEY=ewrwefqhefghsfglasgfalsfvjweflsd
+  volumes:
+    # - ./src/:/app
+    - static_data:/static
+    - media_data:/media
+  depends_on:
+    - mariadb
+
+services:
+
+  mariadb:
+    image: "mariadb:10.5.5-focal"
+    container_name: "video-archive_mariadb"
+    restart: always
+    environment:
+      - MYSQL_DATABASE=video-archive
+      - MYSQL_USER=video-archive
+      - MYSQL_PASSWORD=testtesttest123
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h localhost -u $$MYSQL_USER -s -p
+
+  rabbitmq:
+    image: "rabbitmq:3.8.7-alpine"
+    container_name: "video-archive_rabbitmq"
+    restart: always
+    # ports:
+    # - 5672:5672
+    healthcheck:
+      test: nc -z localhost 5672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  django:
+    <<: *common-django
+    container_name: "video-archive_django"
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.django
+    depends_on:
+      - mariadb
+      - rabbitmq
+      - prepare
+    healthcheck:
+      test: wget -qO- http://localhost:8000/healthcheck/
+
+  celery:
+    <<: *common-django
+    container_name: "video-archive_celery"
+    command: celery worker -E -l info -A project
+    depends_on:
+      - mariadb
+      - rabbitmq
+    healthcheck:
+      test: celery inspect ping -b amqp://guest:guest@rabbitmq:5672 -d celery@$$HOSTNAME
+
+  prepare:
+    <<: *common-django
+    container_name: "video-archive_prepare"
+    command: prepare
+    depends_on:
+      - mariadb
+
+  nginx:
+    container_name: "video-archive_nginx"
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.nginx
+    ports:
+      - 80:80
+    volumes:
+      - static_data:/static
+      - media_data:/media
+    healthcheck:
+      test: wget -qO- http://localhost/healthcheck
+    depends_on:
+      - django
+
+volumes:
+  mariadb_data:
+  rabbitmq_data:
+  static_data:
+  media_data:

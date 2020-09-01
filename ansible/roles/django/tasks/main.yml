@@ -1,0 +1,65 @@
+---
+- name: Run migration Django container
+  tags:
+    - django
+    - application
+    - docker_container
+    - service
+  docker_container:
+    name: "{{ application_name }}_prepare"
+    image: "{{ django_image }}"
+    hostname: prepare
+    state: started
+    detach: false
+    debug: true
+    command: prepare
+    mounts:
+      - source: "{{ django_static_volume }}"
+        target: /static
+      - source: "{{ django_media_volume }}"
+        target: /media
+    networks_cli_compatible: true
+    networks:
+      - name: "{{ application_network_name }}"
+        aliases:
+          - "{{ prepare_network_alias }}"
+    env:
+      DB_HOST: "{{ django_db_host }}"
+      DB_NAME: "{{ django_db_name }}"
+      DB_USER: "{{ django_db_user }}"
+      DB_PASSWORD: "{{ django_db_password }}"
+      DEBUG: "\"{{ django_debug }}\""
+      BROKER_URL: "{{ django_broker_url }}"
+      SECRET_KEY: "{{ django_secret_key }}"
+
+- name: Create and start Django container
+  tags:
+    - django
+    - application
+    - docker_container
+    - service
+  docker_container:
+    name: "{{ application_name }}_django"
+    image: "{{ django_image }}"
+    hostname: django
+    state: started
+    mounts:
+      - source: "{{ django_static_volume }}"
+        target: /static
+      - source: "{{ django_media_volume }}"
+        target: /media
+    networks_cli_compatible: true
+    networks:
+      - name: "{{ application_network_name }}"
+        aliases:
+          - "{{ django_network_alias }}"
+    healthcheck:
+      test: "wget -qO- http://localhost:{{ django_network_port }}/healthcheck/"
+    env:
+      DB_HOST: "{{ django_db_host }}"
+      DB_NAME: "{{ django_db_name }}"
+      DB_USER: "{{ django_db_user }}"
+      DB_PASSWORD: "{{ django_db_password }}"
+      DEBUG: "\"{{ django_debug }}\""
+      BROKER_URL: "{{ django_broker_url }}"
+      SECRET_KEY: "{{ django_secret_key }}"

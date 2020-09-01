@@ -1,0 +1,40 @@
+FROM python:3.8.5-slim-buster as build
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+WORKDIR /wheels
+
+COPY requirements.txt .
+
+RUN pip install --upgrade --no-cache-dir pip && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y gcc default-libmysqlclient-dev build-essential && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    pip wheel -w . -r requirements.txt --no-cache-dir
+
+####################################################################################################
+FROM python:3.8.5-slim-buster
+
+WORKDIR /app
+
+COPY --from=build /wheels/*.whl /wheels/
+COPY --from=build /wheels/requirements.txt .
+
+RUN pip install --upgrade --no-cache-dir pip && \
+    apt-get update && \
+    apt-get install --no-install-recommends -y libmariadb3 ffmpeg netcat wget && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    pip install --no-index --find-links=/wheels --no-cache-dir -r requirements.txt && \
+    rm -Rf /wheels/
+
+COPY ./src/ .
+COPY ./docker/docker-entrypoint.sh /docker-entrypoint.sh
+COPY ./docker/wait-for /usr/local/bin/
+
+EXPOSE 8000
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD wait-for mariadb:3306 -- gunicorn project.wsgi:application --bind 0.0.0.0:8000 -w 4 --error-logfile - --log-level debug

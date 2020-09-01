@@ -1,0 +1,39 @@
+---
+- name: Update deb based OS
+  tags:
+    - update
+  apt:
+    name: '*'
+    update_cache: true
+
+
+- name: Install useful tools
+  tags:
+    - install
+  apt:
+    pkg:
+      - git
+      - vim
+      - tmux
+      - etckeeper
+      - mc
+      - sysstat
+      - htop
+      - gpg
+      - python3-docker
+
+
+- name: Ensure a locale exists {{ locale }}
+  tags:
+    - configure
+    - locale
+  locale_gen:
+    name: "{{ locale }}"
+
+
+- name: Set timezone to {{ timezone }}
+  tags:
+    - configure
+    - timezone
+  timezone:
+    name: "{{ timezone }}"

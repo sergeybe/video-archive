@@ -1,0 +1,75 @@
+---
+application_name: video-archive
+application_version: 0.0.1
+application_secret_key: esefshfasldlvvdvvdvadhjfavs47384b44l4vl35hv3
+application_debug: "True"
+application_network_name: "{{ application_name }}"
+
+application_mariadb_volume: mariadb_data
+application_rabbitmq_volume: rabbitmq_data
+application_static_volume: static_data
+application_media_volume: media_data
+
+application_db_host: mariadb
+application_db_name: "{{ application_name }}"
+application_db_user: "{{ application_name }}"
+application_db_password: "{{ application_name }}"
+
+mariadb_network_alias: mariadb
+rabbitmq_network_alias: rabbitmq
+prepare_network_alias: prepare
+celery_network_alias: celery
+django_network_alias: django
+nginx_network_alias: nginx
+
+mariadb_network_port: 3306
+rabbitmq_network_port: 5672
+django_network_port: 8000
+nginx_network_port: 80
+
+application_broker_url: "amqp://guest:guest@{{ rabbitmq_network_alias }}:{{ rabbitmq_network_port }}/"
+
+#################################################################################
+
+mariadb_image: mariadb:10.5.5-focal
+
+mariadb_volume: "{{ application_mariadb_volume }}"
+
+mariadb_db_name: "{{ application_db_name }}"
+mariadb_db_user: "{{ application_db_user }}"
+mariadb_db_password: "{{ application_db_password }}"
+
+#################################################################################
+
+rabbitmq_image: rabbitmq:3.8.7-alpine
+
+rabbitmq_volume: "{{ application_rabbitmq_volume }}"
+
+#################################################################################
+
+nginx_image: sergeybe/video-archive_nginx:0.0.1
+
+nginx_static_volume: "{{ application_static_volume }}"
+nginx_media_volume: "{{ application_media_volume }}"
+
+#################################################################################
+
+django_image: "sergeybe/video-archive_django:{{ application_version }}"
+
+django_static_volume: "{{ application_static_volume }}"
+django_media_volume: "{{ application_media_volume }}"
+
+django_db_host: "{{ application_db_host }}"
+django_db_name: "{{ application_db_name }}"
+django_db_user: "{{ application_db_user }}"
+django_db_password: "{{ application_db_password }}"
+
+django_debug: "{{ application_debug }}"
+django_broker_url: "{{ application_broker_url }}"
+django_secret_key: "{{ application_secret_key }}"
+
+#################################################################################
+
+celery_image: "sergeybe/video-archive_django:{{ application_version }}"
+celery_static_volume: "{{ application_static_volume }}"
+celery_media_volume: "{{ application_media_volume }}"

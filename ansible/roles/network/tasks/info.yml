@@ -1,0 +1,14 @@
+---
+- name: Get network info
+  docker_network_info:
+    name: "{{ application_network_name }}"
+  register: result
+
+- name: Does network exist?
+  debug:
+    msg: "The network {{ 'exists' if result.exists else 'does not exist' }}"
+
+- name: Print information about network
+  debug:
+    var: result.network
+  when: result.exists

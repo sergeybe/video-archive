@@ -1,0 +1,34 @@
+---
+- name: Create and start Celery container
+  tags:
+    - django
+    - celery
+    - docker_container
+    - service
+  docker_container:
+    name: "{{ application_name }}_celery"
+    image: "{{ django_image }}"
+    hostname: celery
+    state: started
+    command: "wait-for {{ django_network_alias }}:{{ django_network_port }} {{ rabbitmq_network_alias }}:{{ rabbitmq_network_port }} -- celery worker -E -l info -A project"
+    mounts:
+      - source: "{{ django_static_volume }}"
+        target: /static
+      - source: "{{ django_media_volume }}"
+        target: /media
+    networks_cli_compatible: true
+    networks:
+      - name: "{{ application_network_name }}"
+        aliases:
+          - "{{ celery_network_alias }}"
+    healthcheck:
+      test: "celery inspect ping -b amqp://guest:guest@{{ rabbitmq_network_alias }}:{{ rabbitmq_network_port }}/"
+    env:
+      DB_HOST: "{{ django_db_host }}"
+      DB_NAME: "{{ django_db_name }}"
+      DB_USER: "{{ django_db_user }}"
+      DB_PASSWORD: "{{ django_db_password }}"
+      DEBUG: "\"{{ django_debug }}\""
+      BROKER_URL: "{{ django_broker_url }}"
+      SECRET_KEY: "{{ django_secret_key }}"
+    debug: true

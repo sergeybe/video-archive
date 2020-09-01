@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load i18n static video_tags %}
+
+{% block title %}
+    {% trans 'Video' %}
+{% endblock %}
+
+{% block header %}
+    <h1>{% trans 'Video Archive' %}</h1>
+{% endblock %}
+
+{% block content %}
+    <h1>Upload video files</h1>
+    <hr/>
+    {{ form.non_field_errors }}
+    <form action="{% url 'video_upload_page' %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <p class="wrapper">
+                {{ field.label_tag }}
+                {{ field }}
+                {{ field.errors }}
+            </p>
+        {% endfor %}
+        <input type="submit" value="{% trans 'Upload' %}">
+    </form>
+
+    <hr/>
+    {% for video_file in video_files %}
+        {% video_player video_file %}
+    {% endfor %}
+    <hr/>
+{% endblock %}

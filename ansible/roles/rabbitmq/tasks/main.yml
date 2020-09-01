@@ -1,0 +1,21 @@
+---
+- name: Create and start RabbitMQ container
+  tags:
+    - rabbitmq
+    - docker_container
+    - service
+  docker_container:
+    name: "{{ application_name }}_rabbitmq"
+    image: "{{ rabbitmq_image }}"
+    hostname: rabbitmq
+    state: started
+    mounts:
+      - source: "{{ rabbitmq_volume }}"
+        target: /var/lib/rabbitmq
+    networks_cli_compatible: true
+    networks:
+      - name: "{{ application_network_name }}"
+        aliases:
+          - "{{ rabbitmq_network_alias }}"
+    healthcheck:
+      test: "nc -z localhost {{ rabbitmq_network_port }}"

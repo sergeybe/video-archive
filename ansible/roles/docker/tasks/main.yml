@@ -1,0 +1,55 @@
+---
+- name: Ensure old versions of Docker are not installed
+  tags:
+    - install
+    - docker
+  package:
+    name:
+      - docker
+      - docker-engine
+    state: absent
+
+- name: Add Docker GPG apt Key
+  tags:
+    - configure
+    - docker
+  apt_key:
+    url: "{{ docker_apt_gpg_key_url }}"
+    state: present
+
+- name: Add Docker Repository
+  tags:
+    - configure
+    - docker
+  apt_repository:
+    codename: debian
+    repo: "{{ docker_apt_repository }}"
+    state: present
+    mode: 644
+
+- name: Update and install docker-ce package
+  tags:
+    - install
+    - docker
+  package:
+    name: docker-ce
+    state: present
+
+- name: Ensure Docker is started and enabled at boot
+  tags:
+    - configure
+    - docker
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add the user vagrant to docker group
+  tags:
+    - configure
+    - groups
+    - docker
+  user:
+    name: vagrant
+    group: docker
+    append: true

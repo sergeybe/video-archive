@@ -1,0 +1,15 @@
+---
+- name: Video Archive playbook
+  hosts: all
+
+  roles:
+    - common
+    - docker
+    - network
+    - mariadb
+    - rabbitmq
+    - django
+    - nginx
+    - celery
+    - info
+    # - stop

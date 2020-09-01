@@ -1,0 +1,42 @@
+{% load i18n static %}
+<ul>
+    <table>
+        <tboby>
+            <tr>
+                <td>Id</td>
+                <td>#{{ video_file.id }}</td>
+            </tr>
+            <tr>
+                <td>URL</td>
+                <td>{{ video_file.url | default:'-'}}</td>
+            </tr>
+            <tr>
+                <td>Original file</td>
+                <td>{{ video_file.original_file | default:'-'}}</td>
+            </tr>
+            <tr>
+                <td>Preview</td>
+                <td>{{ video_file.preview }}</td>
+            </tr>
+            <tr>
+                <td>MP4 file</td>
+                <td>{{ video_file.video_as_mp4 | default:'-' }}</td>
+            </tr>
+            <tr>
+                <td>WEBM file</td>
+                <td>{{ video_file.video_as_webm | default:'-' }}</td>
+            </tr>
+        </tbody>
+    </table>
+</ul>
+<div class="video_file">
+    <video width="640" height="360" controls poster="{{ video_file.preview_url }}">
+        {% if video_file.video_as_mp4 %}
+        <source src="{{ video_file.video_as_mp4.url }}" type="video/mp4" />
+        {% endif %}
+        {% if video_file.video_as_webm %}
+        <source src="{{ video_file.video_as_webm.url }}" type="video/webm" />
+        {% endif %}
+        {% trans 'Your browser does not support the video tag.' %}
+    </video>
+</div>

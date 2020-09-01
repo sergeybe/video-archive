@@ -1,0 +1,25 @@
+---
+- name: Create and start MariaDB container
+  tags:
+    - mariadb
+    - docker_container
+    - service
+  docker_container:
+    name: "{{ application_name }}_mariadb"
+    image: "{{ mariadb_image }}"
+    state: started
+    mounts:
+      - source: "{{ mariadb_volume }}"
+        target: /var/lib/mariadb
+    networks_cli_compatible: true
+    networks:
+      - name: "{{ application_network_name }}"
+        aliases:
+          - "{{ mariadb_network_alias }}"
+    healthcheck:
+      test: "mysqladmin ping -h localhost -u {{ application_name }} -s -p"
+    env:
+      MYSQL_DATABASE: "{{ mariadb_db_name }}"
+      MYSQL_USER: "{{ mariadb_db_user }}"
+      MYSQL_PASSWORD: "{{ mariadb_db_password }}"
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'

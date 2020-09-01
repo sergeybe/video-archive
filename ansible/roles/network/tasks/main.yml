@@ -1,0 +1,7 @@
+---
+- name: Create Docker network for application
+  tags:
+    - network
+    - docket_network
+  docker_network:
+    name: "{{ application_network_name }}"
